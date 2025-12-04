@@ -49,13 +49,18 @@ async function findNearestHeading(editor: vscode.TextEditor): Promise<number | n
     return findHeading(symbols);
 }
 
-export function setTaskStatus(status: 'TODO' | 'DONE') {
+export async function setTaskStatus(status: 'TODO' | 'DONE') {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'markdown') {
         return;
     }
 
-    const line = editor.document.lineAt(editor.selection.active.line);
+    const headingLine = await findNearestHeading(editor);
+    if (headingLine === null) {
+        return;
+    }
+
+    const line = editor.document.lineAt(headingLine);
     const text = line.text;
     const match = text.match(/^(#+)\s+(TODO|DONE)?\s*(?:\[#[A-Z]\]\s*)?(.+)$/);
     
@@ -69,8 +74,10 @@ export function setTaskStatus(status: 'TODO' | 'DONE') {
     
     let newText: string;
     if (currentStatus === status) {
-        newText = `${hashes} ${priority}${title.replace(/^\[#[A-Z]\]\s*/, '')}`;
+        // Remove status and priority
+        newText = `${hashes} ${title.replace(/^\[#[A-Z]\]\s*/, '')}`;
     } else {
+        // Set status, keep priority
         newText = `${hashes} ${status} ${priority}${title.replace(/^\[#[A-Z]\]\s*/, '')}`;
     }
 
@@ -79,13 +86,18 @@ export function setTaskStatus(status: 'TODO' | 'DONE') {
     });
 }
 
-export function togglePriority() {
+export async function togglePriority() {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'markdown') {
         return;
     }
 
-    const line = editor.document.lineAt(editor.selection.active.line);
+    const headingLine = await findNearestHeading(editor);
+    if (headingLine === null) {
+        return;
+    }
+
+    const line = editor.document.lineAt(headingLine);
     const text = line.text;
     const match = text.match(/^(#+)\s+(TODO|DONE)?\s*(?:\[#([A-Z])\]\s*)?(.+)$/);
     
