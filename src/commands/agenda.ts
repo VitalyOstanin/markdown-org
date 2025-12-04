@@ -19,30 +19,32 @@ export async function showAgenda(context: vscode.ExtensionContext, mode: 'day' |
         return;
     }
 
-    const args = ['--dir', workspaceDir, '--format', 'json'];
-    if (mode === 'tasks') {
-        args.push('--tasks');
-    } else {
-        args.push('--agenda', mode);
-    }
+    const loadData = async () => {
+        const args = ['--dir', workspaceDir, '--format', 'json'];
+        if (mode === 'tasks') {
+            args.push('--tasks');
+        } else {
+            args.push('--agenda', mode);
+        }
 
-    outputChannel.appendLine(`Command: ${extractorPath} ${args.join(' ')}`);
+        outputChannel.appendLine(`Command: ${extractorPath} ${args.join(' ')}`);
 
-    try {
-        const result = await execCommand(extractorPath, args);
-        outputChannel.appendLine(`Output length: ${result.length}`);
-        outputChannel.appendLine(`First 500 chars: ${result.substring(0, 500)}`);
-        
-        const data = JSON.parse(result);
-        outputChannel.appendLine(`Parsed: ${Array.isArray(data) ? 'array' : typeof data}, length: ${data.length}`);
-        outputChannel.appendLine(`First item: ${JSON.stringify(data[0], null, 2)}`);
-        
-        AgendaPanel.render(context, data, mode);
-    } catch (error) {
-        outputChannel.appendLine(`ERROR: ${error}`);
-        outputChannel.show();
-        vscode.window.showErrorMessage(`Failed to load agenda: ${error}`);
-    }
+        try {
+            const result = await execCommand(extractorPath, args);
+            outputChannel.appendLine(`Output length: ${result.length}`);
+            
+            const data = JSON.parse(result);
+            outputChannel.appendLine(`Parsed: ${Array.isArray(data) ? 'array' : typeof data}, length: ${data.length}`);
+            
+            AgendaPanel.render(context, data, mode, loadData);
+        } catch (error) {
+            outputChannel.appendLine(`ERROR: ${error}`);
+            outputChannel.show();
+            vscode.window.showErrorMessage(`Failed to load agenda: ${error}`);
+        }
+    };
+
+    await loadData();
 }
 
 function execCommand(command: string, args: string[]): Promise<string> {

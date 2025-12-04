@@ -27,39 +27,67 @@ interface DayAgenda {
 
 export class AgendaPanel {
     private static currentPanel?: vscode.WebviewPanel;
+    private static watcher?: vscode.FileSystemWatcher;
+    private static debounceTimer?: NodeJS.Timeout;
+    private static refreshCallback?: () => Promise<void>;
 
-    public static render(context: vscode.ExtensionContext, data: DayAgenda[] | Task[], mode: string) {
-        if (AgendaPanel.currentPanel) {
-            AgendaPanel.currentPanel.reveal();
-            AgendaPanel.currentPanel.webview.html = this.getHtmlContent(data, mode);
-            return;
+    public static render(context: vscode.ExtensionContext, data: DayAgenda[] | Task[], mode: string, refreshCallback?: () => Promise<void>) {
+        if (refreshCallback) {
+            AgendaPanel.refreshCallback = refreshCallback;
         }
-        
-        AgendaPanel.currentPanel = vscode.window.createWebviewPanel(
-            'markdownOrgAgenda',
-            `Agenda: ${mode}`,
-            vscode.ViewColumn.Two,
-            { 
-                enableScripts: true,
-                retainContextWhenHidden: true
-            }
-        );
 
-        AgendaPanel.currentPanel.onDidDispose(() => {
-            AgendaPanel.currentPanel = undefined;
-        });
+        if (AgendaPanel.currentPanel) {
+            AgendaPanel.currentPanel.webview.postMessage({ type: 'update', data, mode });
+        } else {
+            AgendaPanel.currentPanel = vscode.window.createWebviewPanel(
+                'markdownOrgAgenda',
+                `Agenda: ${mode}`,
+                vscode.ViewColumn.Two,
+                { 
+                    enableScripts: true,
+                    retainContextWhenHidden: true
+                }
+            );
 
-        AgendaPanel.currentPanel.webview.onDidReceiveMessage(async message => {
-            if (message.command === 'openTask') {
-                const doc = await vscode.workspace.openTextDocument(message.file);
-                const pos = new vscode.Position(message.line - 1, 0);
-                await vscode.window.showTextDocument(doc, {
-                    selection: new vscode.Range(pos, pos)
-                });
-            }
-        });
+            AgendaPanel.currentPanel.onDidDispose(() => {
+                AgendaPanel.currentPanel = undefined;
+                AgendaPanel.watcher?.dispose();
+                AgendaPanel.watcher = undefined;
+                AgendaPanel.refreshCallback = undefined;
+                if (AgendaPanel.debounceTimer) {
+                    clearTimeout(AgendaPanel.debounceTimer);
+                }
+            });
 
-        AgendaPanel.currentPanel.webview.html = this.getHtmlContent(data, mode);
+            AgendaPanel.currentPanel.webview.onDidReceiveMessage(async message => {
+                if (message.command === 'openTask') {
+                    const doc = await vscode.workspace.openTextDocument(message.file);
+                    const pos = new vscode.Position(message.line - 1, 0);
+                    await vscode.window.showTextDocument(doc, {
+                        selection: new vscode.Range(pos, pos)
+                    });
+                }
+            });
+
+            AgendaPanel.currentPanel.webview.html = this.getHtmlContent(data, mode);
+        }
+
+        if (!AgendaPanel.watcher && refreshCallback) {
+            AgendaPanel.watcher = vscode.workspace.createFileSystemWatcher('**/*.md');
+            
+            const triggerRefresh = () => {
+                if (AgendaPanel.debounceTimer) {
+                    clearTimeout(AgendaPanel.debounceTimer);
+                }
+                AgendaPanel.debounceTimer = setTimeout(() => {
+                    AgendaPanel.refreshCallback?.();
+                }, 500);
+            };
+
+            AgendaPanel.watcher.onDidChange(triggerRefresh);
+            AgendaPanel.watcher.onDidCreate(triggerRefresh);
+            AgendaPanel.watcher.onDidDelete(triggerRefresh);
+        }
     }
 
     private static getHtmlContent(data: DayAgenda[] | Task[], mode: string): string {
@@ -104,18 +132,111 @@ export class AgendaPanel {
     </style>
 </head>
 <body>
-    ${content}
+    <div id="content">${content}</div>
     <script>
         const vscode = acquireVsCodeApi();
-        document.querySelectorAll('.task-line').forEach(el => {
-            el.addEventListener('click', () => {
-                vscode.postMessage({
-                    command: 'openTask',
-                    file: el.dataset.file,
-                    line: parseInt(el.dataset.line)
+        
+        function attachListeners() {
+            document.querySelectorAll('.task-line').forEach(el => {
+                el.addEventListener('click', () => {
+                    vscode.postMessage({
+                        command: 'openTask',
+                        file: el.dataset.file,
+                        line: parseInt(el.dataset.line)
+                    });
                 });
             });
+        }
+        
+        attachListeners();
+        
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.type === 'update') {
+                const scrollPos = window.scrollY;
+                const contentEl = document.getElementById('content');
+                const newContent = message.mode === 'tasks' 
+                    ? renderTasks(message.data) 
+                    : renderAgenda(message.data);
+                contentEl.innerHTML = newContent;
+                attachListeners();
+                window.scrollTo(0, scrollPos);
+            }
         });
+        
+        function renderAgenda(days) {
+            let html = '';
+            days.forEach(day => {
+                html += '<div class="day-header">' + formatDayHeader(day.date) + '</div>';
+                (day.overdue || []).forEach(task => html += renderTask(task, task.days_offset));
+                (day.scheduled_timed || []).forEach(task => html += renderTask(task, task.days_offset));
+                (day.scheduled_no_time || []).forEach(task => html += renderTask(task, task.days_offset));
+                (day.upcoming || []).forEach(task => html += renderTask(task, task.days_offset));
+            });
+            return html;
+        }
+        
+        function renderTasks(tasks) {
+            const priorities = ['A', 'B', 'C', ''];
+            let html = '';
+            priorities.forEach(priority => {
+                const filtered = tasks.filter(t => (t.priority || '') === priority);
+                if (filtered.length === 0) return;
+                const header = priority ? 'Priority [#' + priority + ']' : 'No priority';
+                html += '<div class="day-header">' + header + '</div>';
+                filtered.forEach(task => html += renderTask(task));
+            });
+            return html;
+        }
+        
+        function renderTask(task, daysOffset) {
+            const timeInfo = getTimeInfo(task, daysOffset);
+            const status = task.task_type || '';
+            const priority = task.priority ? '[#' + task.priority + ']' : '';
+            const priorityClass = task.priority ? 'priority-' + task.priority.toLowerCase() : '';
+            const statusClass = status === 'TODO' ? 'todo-keyword' : status === 'DONE' ? 'done-keyword' : '';
+            
+            return '<div class="task-line" data-file="' + task.file + '" data-line="' + task.line + '">' +
+                '<span class="todo-label">todo:</span>' +
+                '<span>' + timeInfo + '</span>' +
+                '<span class="' + statusClass + '">' + status + '</span>' +
+                '<span class="' + priorityClass + '">' + priority + '</span>' +
+                '<span>' + task.heading + '</span>' +
+                '</div>';
+        }
+        
+        function getTimeInfo(task, daysOffset) {
+            if (task.timestamp_time) {
+                const type = task.timestamp_type;
+                if (type && type !== 'PLAIN') {
+                    return '<span class="time-display">' + task.timestamp_time + '</span>...... <span class="timestamp-type">' + type + ':</span>';
+                }
+                return '<span class="time-display">' + task.timestamp_time + '</span>......';
+            }
+            if (daysOffset !== undefined) {
+                if (daysOffset < 0) {
+                    const daysAgo = Math.abs(daysOffset);
+                    if (task.timestamp_type === 'SCHEDULED') {
+                        return 'Sched.' + daysAgo + 'x:';
+                    }
+                    return daysAgo + ' d. ago:';
+                }
+                if (daysOffset > 0) {
+                    return 'In ' + daysOffset + ' d.:';
+                }
+            }
+            const type = task.timestamp_type;
+            if (type && type !== 'PLAIN') {
+                return '<span class="timestamp-type">' + type + ':</span>';
+            }
+            return '<span class="timestamp-type">SCHEDULED:</span>';
+        }
+        
+        function formatDayHeader(date) {
+            const d = new Date(date);
+            const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            return d.toLocaleDateString(undefined, options);
+        }
     </script>
 </body>
 </html>`;
