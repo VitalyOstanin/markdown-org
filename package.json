@@ -1,0 +1,82 @@
+{
+  "name": "markdown-org",
+  "displayName": "Markdown Org",
+  "description": "Org-style task management for Markdown files",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "markdown-org.setTodo",
+        "title": "Markdown Org: Set TODO"
+      },
+      {
+        "command": "markdown-org.setDone",
+        "title": "Markdown Org: Set DONE"
+      },
+      {
+        "command": "markdown-org.showAgendaDay",
+        "title": "Markdown Org: Show Agenda (Day)"
+      },
+      {
+        "command": "markdown-org.showAgendaWeek",
+        "title": "Markdown Org: Show Agenda (Week)"
+      },
+      {
+        "command": "markdown-org.showTasks",
+        "title": "Markdown Org: Show Tasks"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "markdown-org.setTodo",
+        "key": "ctrl+k ctrl+t",
+        "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
+        "command": "markdown-org.setDone",
+        "key": "ctrl+k ctrl+d",
+        "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
+        "command": "markdown-org.showAgendaWeek",
+        "key": "ctrl+k ctrl+w",
+        "when": "editorTextFocus && editorLangId == markdown"
+      }
+    ],
+    "configuration": {
+      "title": "Markdown Org",
+      "properties": {
+        "markdown-org.extractorPath": {
+          "type": "string",
+          "default": "/home/vyt/devel/markdown-extract/target/release/markdown-extract",
+          "description": "Path to markdown-extract executable"
+        },
+        "markdown-org.workspaceDir": {
+          "type": "string",
+          "default": "",
+          "description": "Directory to scan for markdown files (empty = workspace root)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.x",
+    "@typescript-eslint/parser": "^6.x",
+    "eslint": "^8.x",
+    "typescript": "^5.3.0"
+  }
+}
