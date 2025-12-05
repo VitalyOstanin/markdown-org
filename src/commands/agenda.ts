@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import { AgendaPanel } from '../views/agendaPanel';
 
-export async function showAgenda(context: vscode.ExtensionContext, mode: 'day' | 'week' | 'tasks') {
+export async function showAgenda(context: vscode.ExtensionContext, mode: 'day' | 'week' | 'month' | 'tasks', initialDate?: string) {
     const config = vscode.workspace.getConfiguration('markdown-org');
     const extractorPath = config.get<string>('extractorPath');
     const workspaceDir = config.get<string>('workspaceDir') || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -17,18 +17,28 @@ export async function showAgenda(context: vscode.ExtensionContext, mode: 'day' |
         return;
     }
 
-    const loadData = async () => {
+    let currentDate = initialDate;
+
+    const loadData = async (date?: string) => {
+        if (date !== undefined) {
+            currentDate = date;
+        }
+        if (!currentDate) {
+            currentDate = new Date().toISOString().split('T')[0];
+        }
+
         const args = ['--dir', workspaceDir, '--format', 'json'];
         if (mode === 'tasks') {
             args.push('--tasks');
         } else {
             args.push('--agenda', mode);
+            args.push('--date', currentDate);
         }
 
         try {
             const result = await execCommand(extractorPath, args);
             const data = JSON.parse(result);
-            AgendaPanel.render(context, data, mode, loadData);
+            AgendaPanel.render(context, data, mode, currentDate, loadData);
         } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
             vscode.window.showErrorMessage(`Failed to load agenda: ${errorMsg}`);

@@ -49,6 +49,10 @@
         "title": "Markdown Org: Show Agenda (Week)"
       },
       {
+        "command": "markdown-org.showAgendaMonth",
+        "title": "Markdown Org: Show Agenda (Month)"
+      },
+      {
         "command": "markdown-org.showTasks",
         "title": "Markdown Org: Show Tasks"
       },
@@ -95,6 +99,11 @@
       {
         "command": "markdown-org.showAgendaWeek",
         "key": "ctrl+k ctrl+w",
+        "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
+        "command": "markdown-org.showAgendaMonth",
+        "key": "ctrl+k ctrl+m",
         "when": "editorTextFocus && editorLangId == markdown"
       },
       {

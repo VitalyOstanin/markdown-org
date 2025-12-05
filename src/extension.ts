@@ -13,6 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('markdown-org.insertDeadline', () => insertDeadlineTimestamp()),
         vscode.commands.registerCommand('markdown-org.showAgendaDay', () => showAgenda(context, 'day')),
         vscode.commands.registerCommand('markdown-org.showAgendaWeek', () => showAgenda(context, 'week')),
+        vscode.commands.registerCommand('markdown-org.showAgendaMonth', () => showAgenda(context, 'month')),
         vscode.commands.registerCommand('markdown-org.showTasks', () => showAgenda(context, 'tasks')),
         vscode.commands.registerCommand('markdown-org.timestampUp', () => adjustTimestamp(1)),
         vscode.commands.registerCommand('markdown-org.timestampDown', () => adjustTimestamp(-1))

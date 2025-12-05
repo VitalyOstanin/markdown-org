@@ -31,15 +31,19 @@ export class AgendaPanel {
     private static currentPanel?: vscode.WebviewPanel;
     private static watcher?: vscode.FileSystemWatcher;
     private static debounceTimer?: NodeJS.Timeout;
-    private static refreshCallback?: () => Promise<void>;
+    private static refreshCallback?: (date?: string) => Promise<void>;
+    private static currentDate?: string;
+    private static currentMode?: string;
 
-    public static render(context: vscode.ExtensionContext, data: AgendaData, mode: string, refreshCallback?: () => Promise<void>) {
+    public static render(context: vscode.ExtensionContext, data: AgendaData, mode: string, date: string | undefined, refreshCallback?: (date?: string) => Promise<void>) {
         if (refreshCallback) {
             AgendaPanel.refreshCallback = refreshCallback;
         }
+        AgendaPanel.currentMode = mode;
+        AgendaPanel.currentDate = date;
 
         if (AgendaPanel.currentPanel) {
-            AgendaPanel.currentPanel.webview.postMessage({ type: 'update', data, mode });
+            AgendaPanel.currentPanel.webview.postMessage({ type: 'update', data, mode, date });
         } else {
             AgendaPanel.currentPanel = vscode.window.createWebviewPanel(
                 'markdownOrgAgenda',
@@ -69,6 +73,8 @@ export class AgendaPanel {
                     await vscode.window.showTextDocument(doc, {
                         selection: new vscode.Range(pos, pos)
                     });
+                } else if (message.command === 'navigate') {
+                    AgendaPanel.refreshCallback?.(message.date);
                 }
             });
 
@@ -95,6 +101,7 @@ export class AgendaPanel {
 
     private static getHtmlContent(data: AgendaData, mode: string): string {
         const dataJson = JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+        const currentDate = AgendaPanel.currentDate || new Date().toISOString().split('T')[0];
         
         return `<!DOCTYPE html>
 <html>
@@ -106,6 +113,29 @@ export class AgendaPanel {
             background: #1e1e1e;
             color: #d4d4d4;
             line-height: 1.6;
+        }
+        .nav-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .nav-btn {
+            background: #0e639c;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .nav-btn:hover {
+            background: #1177bb;
+        }
+        .nav-date {
+            color: #569cd6;
+            font-weight: bold;
+            margin: 0 10px;
         }
         .day-header {
             color: #569cd6;
@@ -133,16 +163,49 @@ export class AgendaPanel {
     </style>
 </head>
 <body>
+    <div class="nav-bar" id="nav-bar"></div>
     <div id="content"></div>
     <script>
         const vscode = acquireVsCodeApi();
         const initialData = ${dataJson};
         const initialMode = ${JSON.stringify(mode)};
+        let currentDate = ${JSON.stringify(currentDate)};
         
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+        
+        function navigate(offset) {
+            const d = new Date(currentDate);
+            if (offset === 0) {
+                d.setTime(new Date().getTime());
+            } else if (initialMode === 'day') {
+                d.setDate(d.getDate() + offset);
+            } else if (initialMode === 'week') {
+                d.setDate(d.getDate() + offset * 7);
+            } else if (initialMode === 'month') {
+                d.setMonth(d.getMonth() + offset);
+            }
+            const newDate = d.toISOString().split('T')[0];
+            vscode.postMessage({ command: 'navigate', date: newDate });
+        }
+        
+        function renderNavBar() {
+            const navBar = document.getElementById('nav-bar');
+            if (initialMode === 'tasks') {
+                navBar.innerHTML = '';
+                return;
+            }
+            const unit = initialMode === 'day' ? 'Day' : initialMode === 'week' ? 'Week' : 'Month';
+            const d = new Date(currentDate);
+            const dateStr = d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            navBar.innerHTML = 
+                '<button class="nav-btn" onclick="navigate(-1)">← Prev ' + unit + '</button>' +
+                '<button class="nav-btn" onclick="navigate(0)">Today</button>' +
+                '<button class="nav-btn" onclick="navigate(1)">Next ' + unit + ' →</button>' +
+                '<span class="nav-date">' + escapeHtml(dateStr) + '</span>';
         }
         
         function attachListeners() {
@@ -160,7 +223,11 @@ export class AgendaPanel {
         window.addEventListener('message', event => {
             const message = event.data;
             if (message.type === 'update') {
+                if (message.date) {
+                    currentDate = message.date;
+                }
                 const scrollPos = window.scrollY;
+                renderNavBar();
                 const contentEl = document.getElementById('content');
                 const newContent = message.mode === 'tasks' 
                     ? renderTasks(message.data) 
@@ -246,6 +313,7 @@ export class AgendaPanel {
         }
         
         // Initial render
+        renderNavBar();
         const contentEl = document.getElementById('content');
         contentEl.innerHTML = initialMode === 'tasks' ? renderTasks(initialData) : renderAgenda(initialData);
         attachListeners();
