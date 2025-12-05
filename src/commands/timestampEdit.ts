@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 
-const TIMESTAMP_REGEX = /<(\d{4})-(\d{2})-(\d{2})(?: ([А-Яа-яA-Za-z]{2,3}))?(?: (\d{2}):(\d{2}))?>/;
+const TIMESTAMP_REGEX = /<(\d{4})-(\d{2})-(\d{2})(?: ([А-Яа-яA-Za-z]{2,3}))?(?: (\d{2}):(\d{2}))?(?: (\+\d+[dwmy]{1,2}))?>/;
 const HEADING_REGEX = /^(#+)\s+(?:(TODO|DONE)\s+)?(?:\[#([A-Z])\]\s+)?(.+)$/;
-const TIMESTAMP_LINE_REGEX = /^`(CREATED|SCHEDULED|DEADLINE): (<[^>]+>)`$/;
+const TIMESTAMP_LINE_REGEX = /^(\s*)`(CREATED|SCHEDULED|DEADLINE|CLOSED): (<[^>]+>)`$/;
 const PRIORITY_A_CODE = 'A'.charCodeAt(0);
 const PRIORITY_Z_CODE = 'Z'.charCodeAt(0);
 
@@ -18,8 +18,8 @@ function getTimestampTypeAtCursor(editor: vscode.TextEditor): { match: RegExpMat
     const match = lineText.match(TIMESTAMP_LINE_REGEX);
     if (!match) return null;
     
-    const typeStart = 1;
-    const typeEnd = typeStart + match[1].length;
+    const typeStart = lineText.indexOf(match[2]);
+    const typeEnd = typeStart + match[2].length;
     
     if (position.character >= typeStart && position.character <= typeEnd) {
         const range = new vscode.Range(position.line, typeStart, position.line, typeEnd);
@@ -30,10 +30,19 @@ function getTimestampTypeAtCursor(editor: vscode.TextEditor): { match: RegExpMat
 }
 
 function toggleTimestampType(match: RegExpMatchArray): string {
-    const currentType = match[1];
-    const timestamp = match[2];
-    const newType = currentType === 'SCHEDULED' ? 'DEADLINE' : 'SCHEDULED';
-    return `\`${newType}: ${timestamp}\``;
+    const indent = match[1];
+    const currentType = match[2];
+    const timestamp = match[3];
+    
+    if (currentType === 'CREATED') {
+        return `${indent}\`${currentType}: ${timestamp}\``;
+    }
+    
+    const types = ['SCHEDULED', 'DEADLINE', 'CLOSED'];
+    const currentIndex = types.indexOf(currentType);
+    const newIndex = (currentIndex + 1) % types.length;
+    const newType = types[newIndex];
+    return `${indent}\`${newType}: ${timestamp}\``;
 }
 
 function getHeadingPartAtCursor(editor: vscode.TextEditor): { match: RegExpMatchArray; range: vscode.Range; part: HeadingPart } | null {
@@ -191,6 +200,7 @@ function incrementTimestamp(match: RegExpMatchArray, part: TimestampPart, delta:
     const weekday = match[4] || '';
     const hour = match[5] ? parseInt(match[5]) : undefined;
     const minute = match[6] ? parseInt(match[6]) : undefined;
+    const repeater = match[7] || '';
     
     const date = new Date(year, month - 1, day, hour ?? 0, minute ?? 0);
     
@@ -228,6 +238,9 @@ function incrementTimestamp(match: RegExpMatchArray, part: TimestampPart, delta:
         const newMinute = date.getMinutes();
         result += ` ${newHour.toString().padStart(2, '0')}:${newMinute.toString().padStart(2, '0')}`;
     }
+    if (repeater) {
+        result += ` ${repeater}`;
+    }
     result += '>';
     
     return result;
@@ -253,8 +266,20 @@ function getWeekdayName(date: Date, originalFormat: string): string {
 
 export async function adjustTimestamp(delta: number) {
     const editor = vscode.window.activeTextEditor;
-    if (!editor || !editor.selection.isEmpty) {
-        await vscode.commands.executeCommand(delta > 0 ? 'cursorUpSelect' : 'cursorDownSelect');
+    if (!editor) {
+        return;
+    }
+    
+    const timestamp = getTimestampAtCursor(editor);
+    if (timestamp) {
+        const newTimestamp = incrementTimestamp(timestamp.match, timestamp.part, delta);
+        
+        await editor.edit(editBuilder => {
+            editBuilder.replace(timestamp.range, newTimestamp);
+        });
+        
+        const newPosition = editor.selection.active;
+        editor.selection = new vscode.Selection(newPosition, newPosition);
         return;
     }
     
@@ -286,18 +311,5 @@ export async function adjustTimestamp(delta: number) {
         return;
     }
     
-    const timestamp = getTimestampAtCursor(editor);
-    if (!timestamp) {
-        await vscode.commands.executeCommand(delta > 0 ? 'cursorUpSelect' : 'cursorDownSelect');
-        return;
-    }
-    
-    const newTimestamp = incrementTimestamp(timestamp.match, timestamp.part, delta);
-    
-    await editor.edit(editBuilder => {
-        editBuilder.replace(timestamp.range, newTimestamp);
-    });
-    
-    const newPosition = editor.selection.active;
-    editor.selection = new vscode.Selection(newPosition, newPosition);
+    await vscode.commands.executeCommand(delta > 0 ? 'cursorUpSelect' : 'cursorDownSelect');
 }

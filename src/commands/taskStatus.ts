@@ -113,12 +113,27 @@ export async function insertCreatedTimestamp() {
         }
     }
     
+    const indent = getTimestampIndent(editor, headingLine);
     const timestamp = formatTimestamp(new Date());
     const insertPosition = new vscode.Position(nextLineNum, 0);
     
     editor.edit(editBuilder => {
-        editBuilder.insert(insertPosition, `\`CREATED: ${timestamp}\`\n`);
+        editBuilder.insert(insertPosition, `${indent}\`CREATED: ${timestamp}\`\n`);
     });
+}
+
+function getTimestampIndent(editor: vscode.TextEditor, headingLine: number): string {
+    const timestampRegex = /^(\s*)`(CREATED|SCHEDULED|DEADLINE|CLOSED): <[^>]+>`$/;
+    
+    if (headingLine + 1 < editor.document.lineCount) {
+        const line = editor.document.lineAt(headingLine + 1);
+        const match = line.text.match(timestampRegex);
+        if (match) {
+            return match[1];
+        }
+    }
+    
+    return '';
 }
 
 export async function insertScheduledTimestamp() {
@@ -146,19 +161,21 @@ async function insertOrReplaceTimestamp(type: 'SCHEDULED' | 'DEADLINE') {
     let foundLine: number | null = null;
     let foundType: string | null = null;
     let foundTimestamp: string | null = null;
+    let foundIndent: string = '';
     
     for (let i = headingLine + 1; i < editor.document.lineCount; i++) {
         const line = editor.document.lineAt(i);
-        const match = line.text.match(/^`(CREATED|SCHEDULED|DEADLINE): (<[^>]+>)`$/);
+        const match = line.text.match(/^(\s*)`(CREATED|SCHEDULED|DEADLINE): (<[^>]+>)`$/);
         
         if (!match) {
             break;
         }
         
-        if (match[1] === type || match[1] === otherType) {
+        if (match[2] === type || match[2] === otherType) {
             foundLine = i;
-            foundType = match[1];
-            foundTimestamp = match[2];
+            foundType = match[2];
+            foundTimestamp = match[3];
+            foundIndent = match[1];
         }
     }
     
@@ -171,8 +188,8 @@ async function insertOrReplaceTimestamp(type: 'SCHEDULED' | 'DEADLINE') {
             });
             return;
         } else {
-            // Replace other type with current type, keep timestamp
-            const newText = `\`${type}: ${foundTimestamp}\``;
+            // Replace other type with current type, keep timestamp and indent
+            const newText = `${foundIndent}\`${type}: ${foundTimestamp}\``;
             editor.edit(editBuilder => {
                 editBuilder.replace(editor.document.lineAt(foundLine!).range, newText);
             });
@@ -181,10 +198,11 @@ async function insertOrReplaceTimestamp(type: 'SCHEDULED' | 'DEADLINE') {
     }
     
     // Insert new timestamp after heading
+    const indent = getTimestampIndent(editor, headingLine);
     const timestamp = formatTimestamp(new Date());
     const insertPosition = new vscode.Position(headingLine + 1, 0);
     
     editor.edit(editBuilder => {
-        editBuilder.insert(insertPosition, `\`${type}: ${timestamp}\`\n`);
+        editBuilder.insert(insertPosition, `${indent}\`${type}: ${timestamp}\`\n`);
     });
 }
