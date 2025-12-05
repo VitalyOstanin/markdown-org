@@ -31,13 +31,13 @@ export class AgendaPanel {
     private static currentPanel?: vscode.WebviewPanel;
     private static watcher?: vscode.FileSystemWatcher;
     private static debounceTimer?: NodeJS.Timeout;
-    private static refreshCallback?: (date?: string) => Promise<void>;
+    private static refreshCallback?: (date?: string, userInitiated?: boolean) => Promise<void>;
     private static currentDate?: string;
     private static currentMode?: string;
     private static dayCheckInterval?: NodeJS.Timeout;
     private static lastCheckedDay?: string;
 
-    public static render(context: vscode.ExtensionContext, data: AgendaData, mode: string, date: string | undefined, refreshCallback?: (date?: string) => Promise<void>) {
+    public static render(context: vscode.ExtensionContext, data: AgendaData, mode: string, date: string | undefined, refreshCallback?: (date?: string, userInitiated?: boolean) => Promise<void>, userInitiated: boolean = true) {
         if (refreshCallback) {
             AgendaPanel.refreshCallback = refreshCallback;
         }
@@ -47,6 +47,9 @@ export class AgendaPanel {
         AgendaPanel.currentDate = date || localDate;
 
         if (AgendaPanel.currentPanel) {
+            if (userInitiated) {
+                AgendaPanel.currentPanel.reveal(vscode.ViewColumn.One);
+            }
             AgendaPanel.currentPanel.webview.postMessage({ type: 'update', data, mode, date });
         } else {
             AgendaPanel.currentPanel = vscode.window.createWebviewPanel(
@@ -82,7 +85,7 @@ export class AgendaPanel {
                         selection: new vscode.Range(pos, pos)
                     });
                 } else if (message.command === 'navigate') {
-                    AgendaPanel.refreshCallback?.(message.date);
+                    AgendaPanel.refreshCallback?.(message.date, true);
                 }
             });
 

@@ -19,7 +19,7 @@ export async function showAgenda(context: vscode.ExtensionContext, mode: 'day' |
 
     let currentDate = initialDate;
 
-    const loadData = async (date?: string) => {
+    const loadData = async (date?: string, userInitiated: boolean = false) => {
         if (date !== undefined) {
             currentDate = date;
         }
@@ -39,14 +39,14 @@ export async function showAgenda(context: vscode.ExtensionContext, mode: 'day' |
         try {
             const result = await execCommand(extractorPath, args);
             const data = JSON.parse(result);
-            AgendaPanel.render(context, data, mode, currentDate, loadData);
+            AgendaPanel.render(context, data, mode, currentDate, loadData, userInitiated);
         } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
             vscode.window.showErrorMessage(`Failed to load agenda: ${errorMsg}`);
         }
     };
 
-    await loadData();
+    await loadData(undefined, true);
 }
 
 function execCommand(command: string, args: string[]): Promise<string> {
