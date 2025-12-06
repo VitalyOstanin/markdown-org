@@ -62,7 +62,7 @@ src/
 ```bash
 npm install -g @vscode/vsce
 vsce package
-code --install-extension markdown-org-0.0.1.vsix
+code --install-extension markdown-org-vscode-0.0.1.vsix
 ```
 
 ### Для разработки
@@ -70,7 +70,7 @@ code --install-extension markdown-org-0.0.1.vsix
 Создать симлинк в каталог расширений VS Code:
 
 ```bash
-ln -s $(pwd) ~/.vscode/extensions/markdown-org
+ln -s $(pwd) ~/.vscode/extensions/markdown-org-vscode
 ```
 
 ## Использование
@@ -118,6 +118,12 @@ ln -s $(pwd) ~/.vscode/extensions/markdown-org
 
 ## Зависимости
 
-Расширение использует внешнюю утилиту [markdown-extract](https://github.com/user/markdown-extract) для извлечения задач из markdown файлов.
+Расширение использует внешнюю утилиту [markdown-org-extract](https://crates.io/crates/markdown-org-extract) для извлечения задач из markdown файлов.
 
-Убедитесь, что утилита собрана и путь к ней указан в настройках.
+### Установка markdown-org-extract
+
+```bash
+cargo install markdown-org-extract
+```
+
+После установки утилита будет доступна в `~/.cargo/bin/markdown-org-extract`. Убедитесь, что путь к ней указан в настройках расширения (`markdown-org.extractorPath`).

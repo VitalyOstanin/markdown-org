@@ -1,11 +1,11 @@
 {
-  "name": "markdown-org",
+  "name": "markdown-org-vscode",
   "displayName": "Markdown Org",
   "description": "Org-style task management for Markdown files",
   "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/VitalyOstanin/markdown-org"
+    "url": "https://github.com/VitalyOstanin/markdown-org-vscode"
   },
   "license": "MIT",
   "engines": {
