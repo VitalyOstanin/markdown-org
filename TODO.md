@@ -38,4 +38,8 @@
   - Test priority toggling
   - Test heading parsing and extraction
 - [x] Set up test framework (Mocha)
-- [ ] Add integration tests for commands
+- [x] Add integration tests for commands
+  - Test task status commands (setTodo, setDone, togglePriority)
+  - Test timestamp commands (insertCreated, insertScheduled, insertDeadline)
+  - Test timestamp navigation (timestampUp, timestampDown)
+  - Test command execution in real VS Code environment
