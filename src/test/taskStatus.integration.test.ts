@@ -106,4 +106,28 @@ suite('Task Status Integration Tests', () => {
         
         assert.strictEqual(document.lineAt(0).text, '## TODO Task title');
     });
+
+    test('Remove TODO also removes priority', async () => {
+        document = await vscode.workspace.openTextDocument({
+            content: '## TODO [#A] Task title',
+            language: 'markdown'
+        });
+        editor = await vscode.window.showTextDocument(document);
+        
+        await vscode.commands.executeCommand('markdown-org.setTodo');
+        
+        assert.strictEqual(document.lineAt(0).text, '## Task title');
+    });
+
+    test('Remove DONE also removes priority', async () => {
+        document = await vscode.workspace.openTextDocument({
+            content: '## DONE [#A] Task title',
+            language: 'markdown'
+        });
+        editor = await vscode.window.showTextDocument(document);
+        
+        await vscode.commands.executeCommand('markdown-org.setDone');
+        
+        assert.strictEqual(document.lineAt(0).text, '## Task title');
+    });
 });

@@ -37,12 +37,8 @@ export async function setTaskStatus(status: 'TODO' | 'DONE') {
     
     let newText: string;
     if (currentStatus === status) {
-        // Remove status, keep priority if exists
-        newText = `${hashes} `;
-        if (priority) {
-            newText += `[#${priority}] `;
-        }
-        newText += title;
+        // Remove status and priority
+        newText = `${hashes} ${title}`;
     } else {
         // Set status, keep priority if exists
         newText = `${hashes} ${status} `;
