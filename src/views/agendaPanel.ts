@@ -95,6 +95,9 @@ export class AgendaPanel {
                     } else {
                         AgendaPanel.refreshCallback?.(message.date, true);
                     }
+                } else if (message.command === 'cycleTag') {
+                    const { cycleTag } = require('../commands/agenda');
+                    await cycleTag(context);
                 }
             });
 
@@ -188,6 +191,10 @@ export class AgendaPanel {
             color: #dcdcaa;
             font-weight: bold;
             margin-left: auto;
+            cursor: pointer;
+        }
+        .tag-indicator:hover {
+            color: #4fc1ff;
         }
         .day-header {
             color: #4fc1ff;
@@ -542,7 +549,10 @@ export class AgendaPanel {
         function renderNavBar() {
             const navBar = document.getElementById('nav-bar');
             if (initialMode === 'tasks') {
-                navBar.innerHTML = '<span class="tag-indicator">Tag: ' + escapeHtml(currentTag) + '</span>';
+                navBar.innerHTML = '<span class="tag-indicator" id="tag-indicator">Tag: ' + escapeHtml(currentTag) + '</span>';
+                document.getElementById('tag-indicator').addEventListener('click', () => {
+                    vscode.postMessage({ command: 'cycleTag' });
+                });
                 return;
             }
             const unit = initialMode === 'day' ? 'Day' : initialMode === 'week' ? 'Week' : 'Month';
@@ -556,11 +566,14 @@ export class AgendaPanel {
                 '<button class="nav-btn" id="btn-today">Today</button>' +
                 '<button class="nav-btn" id="btn-next">Next ' + unit + ' →</button>' +
                 '<span class="nav-date">' + escapeHtml(dateStr) + '</span>' +
-                '<span class="tag-indicator">Tag: ' + escapeHtml(currentTag) + '</span>';
+                '<span class="tag-indicator" id="tag-indicator">Tag: ' + escapeHtml(currentTag) + '</span>';
             
             document.getElementById('btn-prev').addEventListener('click', () => navigate(-1));
             document.getElementById('btn-today').addEventListener('click', () => navigate(0));
             document.getElementById('btn-next').addEventListener('click', () => navigate(1));
+            document.getElementById('tag-indicator').addEventListener('click', () => {
+                vscode.postMessage({ command: 'cycleTag' });
+            });
         }
     </script>
 </body>
