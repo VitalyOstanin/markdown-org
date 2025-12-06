@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { setTaskStatus, togglePriority, insertCreatedTimestamp, insertScheduledTimestamp, insertDeadlineTimestamp } from './commands/taskStatus';
 import { showAgenda } from './commands/agenda';
 import { adjustTimestamp } from './commands/timestampEdit';
+import { moveToArchive, promoteToMaintain } from './commands/moveHeading';
 
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
@@ -16,7 +17,9 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('markdown-org.showAgendaMonth', () => showAgenda(context, 'month')),
         vscode.commands.registerCommand('markdown-org.showTasks', () => showAgenda(context, 'tasks')),
         vscode.commands.registerCommand('markdown-org.timestampUp', () => adjustTimestamp(1)),
-        vscode.commands.registerCommand('markdown-org.timestampDown', () => adjustTimestamp(-1))
+        vscode.commands.registerCommand('markdown-org.timestampDown', () => adjustTimestamp(-1)),
+        vscode.commands.registerCommand('markdown-org.moveToArchive', () => moveToArchive()),
+        vscode.commands.registerCommand('markdown-org.promoteToMaintain', () => promoteToMaintain())
     );
 }
 

@@ -63,6 +63,14 @@
       {
         "command": "markdown-org.timestampDown",
         "title": "Markdown Org: Timestamp Down"
+      },
+      {
+        "command": "markdown-org.moveToArchive",
+        "title": "Markdown Org: Move to Archive"
+      },
+      {
+        "command": "markdown-org.promoteToMaintain",
+        "title": "Markdown Org: Promote to Maintain"
       }
     ],
     "keybindings": [
@@ -115,6 +123,16 @@
         "command": "markdown-org.timestampDown",
         "key": "shift+down",
         "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
+        "command": "markdown-org.moveToArchive",
+        "key": "ctrl+k ctrl+k ctrl+m ctrl+a",
+        "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
+        "command": "markdown-org.promoteToMaintain",
+        "key": "ctrl+k ctrl+k ctrl+m ctrl+p",
+        "when": "editorTextFocus && editorLangId == markdown"
       }
     ],
     "configuration": {
@@ -129,6 +147,11 @@
           "type": "string",
           "default": "",
           "description": "Directory to scan for markdown files (empty = workspace root)"
+        },
+        "markdown-org.maintainFilePath": {
+          "type": "string",
+          "default": "/home/vyt/devel/vyt-org/vyt-todo.md",
+          "description": "Path to maintain file for promoted headings"
         }
       }
     }
