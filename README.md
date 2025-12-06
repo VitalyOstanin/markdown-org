@@ -57,6 +57,13 @@ ln -s $(pwd) ~/.vscode/extensions/markdown-org-vscode
 `DEADLINE: <2025-12-06 Fri 15:00>`
 ```
 
+**Completed task:**
+```markdown
+## DONE Fix bug in parser
+`CREATED: <2025-12-01 Sun 10:00>`
+`CLOSED: <2025-12-03 Tue 14:30>`
+```
+
 **Without tasks (standalone timestamps):**
 ```markdown
 ## Project planning session
