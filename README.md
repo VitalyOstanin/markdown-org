@@ -8,6 +8,7 @@ Brings [Org mode](https://orgmode.org/) task management workflow to Markdown fil
 
 - **Task Management** - TODO/DONE statuses with priority levels ([#A])
 - **Timestamps** - SCHEDULED, DEADLINE, and CREATED timestamps with date/time
+- **Repeating Tasks** - Org-mode repeater syntax (+1d, +1w, +1wd for workdays)
 - **Agenda Views** - Day, week, and month views with automatic task grouping
 - **Live Updates** - Agenda automatically refreshes when markdown files are saved
 - **File Watchers** - Real-time monitoring of workspace changes
