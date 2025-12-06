@@ -3,6 +3,7 @@
   "displayName": "Markdown Org",
   "description": "Org-style task management for Markdown files",
   "version": "0.1.0",
+  "publisher": "vitalyostanin",
   "repository": {
     "type": "git",
     "url": "https://github.com/VitalyOstanin/markdown-org-vscode"
