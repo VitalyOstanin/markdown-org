@@ -174,8 +174,6 @@ Locale for date formatting in agenda views.
 **Examples:**
 - `"en-US"` - English (United States): "Saturday, December 6 2025"
 - `"ru-RU"` - Russian: "суббота, 6 декабря 2025"
-- `"de-DE"` - German: "Samstag, 6. Dezember 2025"
-- `"fr-FR"` - French: "samedi 6 décembre 2025"
 
 ```json
 {
