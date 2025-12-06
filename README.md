@@ -53,24 +53,24 @@ ln -s $(pwd) ~/.vscode/extensions/markdown-org-vscode
 **With tasks:**
 ```markdown
 ## TODO [#A] Important meeting
-SCHEDULED: <2025-12-06 Fri 14:30>
-DEADLINE: <2025-12-06 Fri 15:00>
+`SCHEDULED: <2025-12-06 Fri 14:30>`
+`DEADLINE: <2025-12-06 Fri 15:00>`
 ```
 
 **Without tasks (standalone timestamps):**
 ```markdown
 ## Project planning session
-SCHEDULED: <2025-12-10 Tue 10:00>
+`SCHEDULED: <2025-12-10 Tue 10:00>`
 
 ## Report submission
-DEADLINE: <2025-12-15 Sun>
+`DEADLINE: <2025-12-15 Sun>`
 ```
 
 **Creation timestamp:**
 ```markdown
 ## TODO Review documentation
-CREATED: <2025-12-01 Sun 09:15>
-SCHEDULED: <2025-12-06 Fri>
+`CREATED: <2025-12-01 Sun 09:15>`
+`SCHEDULED: <2025-12-06 Fri>`
 ```
 
 ### Priority Levels
