@@ -2,130 +2,247 @@
 
 VS Code extension for org-style task management in Markdown files.
 
-## Сборка проекта
-
-### Требования
-
-- Node.js 18+
-- npm
-- VS Code
-
-### Установка зависимостей
+## Quick Start
 
 ```bash
+# Clone repository
+git clone https://github.com/VitalyOstanin/markdown-org-vscode.git
+cd markdown-org-vscode
+
+# Install dependencies
 npm install
-```
 
-### Компиляция
-
-```bash
+# Compile
 npm run compile
-```
 
-Или в режиме watch для автоматической перекомпиляции:
-
-```bash
-npm run watch
-```
-
-## Разработка и отладка
-
-### Запуск в режиме разработки
-
-1. Открыть проект в VS Code
-2. Нажать `F5` или `Run > Start Debugging`
-3. Откроется новое окно VS Code с установленным расширением
-4. Открыть любой `.md` файл и протестировать команды
-
-### Отладка
-
-- Точки останова работают в файлах `.ts` в папке `src/`
-- Консоль отладки показывает вывод `console.log()`
-- После изменений в коде нажать `Ctrl+Shift+F5` для перезапуска
-
-### Структура проекта
-
-```
-src/
-├── extension.ts           # Точка входа, регистрация команд
-├── commands/
-│   ├── taskStatus.ts      # TODO/DONE команды
-│   └── agenda.ts          # Agenda/Tasks команды
-└── views/
-    └── agendaPanel.ts     # WebView для отображения
-```
-
-## Установка в VS Code
-
-### Из исходников
-
-```bash
-npm install -g @vscode/vsce
-vsce package
-code --install-extension markdown-org-vscode-0.0.1.vsix
-```
-
-### Для разработки
-
-Создать симлинк в каталог расширений VS Code:
-
-```bash
+# Create symlink to VS Code extensions directory
 ln -s $(pwd) ~/.vscode/extensions/markdown-org-vscode
+
+# Reload VS Code window (Ctrl+Shift+P -> "Developer: Reload Window")
 ```
 
-## Использование
+**Prerequisites:**
+- [markdown-org-extract](https://crates.io/crates/markdown-org-extract): `cargo install markdown-org-extract`
 
-### Команды
+## Syntax Examples
 
-**Статусы задач:**
-- `Markdown Org: Set TODO` - Пометить заголовок как TODO
-- `Markdown Org: Set DONE` - Пометить заголовок как DONE
-- `Markdown Org: Toggle Priority` - Переключить приоритет (нет → A → нет)
+### Task Statuses
 
-**Временные метки:**
-- `Markdown Org: Insert CREATED Timestamp` - Вставить метку создания
-- `Markdown Org: Insert SCHEDULED Timestamp` - Вставить метку планирования
-- `Markdown Org: Insert DEADLINE Timestamp` - Вставить метку дедлайна
-- `Markdown Org: Timestamp Up` - Увеличить дату/время под курсором
-- `Markdown Org: Timestamp Down` - Уменьшить дату/время под курсором
+```markdown
+## TODO Task without priority
+## TODO [#A] High priority task
+## DONE Completed task
+## Regular heading without status
+```
 
-**Просмотр задач:**
-- `Markdown Org: Show Agenda (Day)` - Задачи на сегодня
-- `Markdown Org: Show Agenda (Week)` - Задачи на неделю
-- `Markdown Org: Show Tasks` - Все TODO задачи по приоритетам
+### Timestamps
 
-### Горячие клавиши
+**With tasks:**
+```markdown
+## TODO [#A] Important meeting
+SCHEDULED: <2025-12-06 Fri 14:30>
+DEADLINE: <2025-12-06 Fri 15:00>
+```
 
-**Статусы задач:**
-- `Ctrl+K Ctrl+T` - Set TODO
-- `Ctrl+K Ctrl+D` - Set DONE
-- `Ctrl+K Ctrl+P` - Toggle Priority (нет → A → нет)
+**Without tasks (standalone timestamps):**
+```markdown
+## Project planning session
+SCHEDULED: <2025-12-10 Tue 10:00>
 
-**Временные метки:**
-- `Ctrl+K Ctrl+K Ctrl+C` - Insert CREATED timestamp
-- `Ctrl+K Ctrl+K Ctrl+S` - Insert SCHEDULED timestamp
-- `Ctrl+K Ctrl+K Ctrl+D` - Insert DEADLINE timestamp
-- `Shift+Up` - Timestamp Up (увеличить дату/время)
-- `Shift+Down` - Timestamp Down (уменьшить дату/время)
+## Report submission
+DEADLINE: <2025-12-15 Sun>
+```
 
-**Просмотр задач:**
-- `Ctrl+K Ctrl+W` - Show Agenda (Week)
+**Creation timestamp:**
+```markdown
+## TODO Review documentation
+CREATED: <2025-12-01 Sun 09:15>
+SCHEDULED: <2025-12-06 Fri>
+```
 
-### Настройки
+### Priority Levels
 
-- `markdown-org.extractorPath` - Путь к markdown-org-extract (по умолчанию: `markdown-org-extract` из PATH)
-- `markdown-org.workspaceDir` - Каталог для сканирования (по умолчанию: корень workspace)
-- `markdown-org.maintainFilePath` - Путь к файлу для перемещения заголовков (по умолчанию: отключено)
-- `markdown-org.dateLocale` - Локаль для форматирования дат (по умолчанию: `en-US`, примеры: `ru-RU`, `de-DE`)
+- `[#A]` - High priority (shown first in agenda)
+- No priority marker - Normal priority
 
-## Зависимости
+## Commands
 
-Расширение использует внешнюю утилиту [markdown-org-extract](https://crates.io/crates/markdown-org-extract) для извлечения задач из markdown файлов.
+### Task Status Commands
 
-### Установка markdown-org-extract
+| Command | Hotkey | Description |
+|---------|--------|-------------|
+| `Markdown Org: Set TODO` | `Ctrl+K Ctrl+T` | Mark heading as TODO |
+| `Markdown Org: Set DONE` | `Ctrl+K Ctrl+D` | Mark heading as DONE |
+| `Markdown Org: Toggle Priority` | `Ctrl+K Ctrl+P` | Toggle priority: none → [#A] → none |
+
+### Timestamp Commands
+
+| Command | Hotkey | Description |
+|---------|--------|-------------|
+| `Markdown Org: Insert CREATED Timestamp` | `Ctrl+K Ctrl+K Ctrl+C` | Insert CREATED timestamp at cursor |
+| `Markdown Org: Insert SCHEDULED Timestamp` | `Ctrl+K Ctrl+K Ctrl+S` | Insert SCHEDULED timestamp at cursor |
+| `Markdown Org: Insert DEADLINE Timestamp` | `Ctrl+K Ctrl+K Ctrl+D` | Insert DEADLINE timestamp at cursor |
+| `Markdown Org: Timestamp Up` | `Shift+Up` | Increment date/time under cursor |
+| `Markdown Org: Timestamp Down` | `Shift+Down` | Decrement date/time under cursor |
+
+### Agenda Commands
+
+| Command | Hotkey | Description |
+|---------|--------|-------------|
+| `Markdown Org: Show Agenda (Day)` | - | Show today's tasks |
+| `Markdown Org: Show Agenda (Week)` | `Ctrl+K Ctrl+W` | Show week's tasks |
+| `Markdown Org: Show Agenda (Month)` | - | Show month's tasks |
+| `Markdown Org: Show Tasks` | - | Show all TODO tasks by priority |
+
+### Heading Management Commands
+
+| Command | Hotkey | Description |
+|---------|--------|-------------|
+| `Markdown Org: Move to Archive` | `Ctrl+K Ctrl+A` | Move current heading to archive section |
+| `Markdown Org: Promote to Maintain` | `Ctrl+K Ctrl+M` | Move heading to maintain file (requires `maintainFilePath` setting) |
+
+## Settings
+
+### `markdown-org.extractorPath`
+
+**Type:** `string`  
+**Default:** `"markdown-org-extract"`
+
+Path to the markdown-org-extract executable. By default, searches in system PATH.
+
+```json
+{
+  "markdown-org.extractorPath": "markdown-org-extract"
+}
+```
+
+For custom installation location:
+```json
+{
+  "markdown-org.extractorPath": "/custom/path/to/markdown-org-extract"
+}
+```
+
+### `markdown-org.workspaceDir`
+
+**Type:** `string`  
+**Default:** `""` (workspace root)
+
+Directory to scan for markdown files. Empty value uses workspace root.
+
+```json
+{
+  "markdown-org.workspaceDir": "/path/to/notes"
+}
+```
+
+### `markdown-org.maintainFilePath`
+
+**Type:** `string`  
+**Default:** `""` (disabled)
+
+Path to the maintain file for the "Promote to Maintain" command. When empty, the command is disabled.
+
+```json
+{
+  "markdown-org.maintainFilePath": "/path/to/maintain.md"
+}
+```
+
+**Note:** The "Promote to Maintain" command requires this setting to be configured. It moves the current heading (with all its content) to the specified file.
+
+### `markdown-org.dateLocale`
+
+**Type:** `string`  
+**Default:** `"en-US"`
+
+Locale for date formatting in agenda views.
+
+**Examples:**
+- `"en-US"` - English (United States): "Saturday, December 6 2025"
+- `"ru-RU"` - Russian: "суббота, 6 декабря 2025"
+- `"de-DE"` - German: "Samstag, 6. Dezember 2025"
+- `"fr-FR"` - French: "samedi 6 décembre 2025"
+
+```json
+{
+  "markdown-org.dateLocale": "ru-RU"
+}
+```
+
+## Dependencies
+
+This extension requires [markdown-org-extract](https://crates.io/crates/markdown-org-extract) - a Rust utility for extracting tasks from markdown files.
+
+### Installation
 
 ```bash
 cargo install markdown-org-extract
 ```
 
-После установки утилита будет доступна в `~/.cargo/bin/markdown-org-extract`. Убедитесь, что путь к ней указан в настройках расширения (`markdown-org.extractorPath`).
+After installation, the utility will be available at `~/.cargo/bin/markdown-org-extract`. Make sure `~/.cargo/bin` is in your PATH, or configure the full path in `markdown-org.extractorPath` setting.
+
+## Development
+
+### Requirements
+
+- Node.js 18+
+- npm
+- VS Code
+
+### Build
+
+```bash
+npm install
+npm run compile
+```
+
+Or watch mode for automatic recompilation:
+
+```bash
+npm run watch
+```
+
+### Debug
+
+1. Open project in VS Code
+2. Press `F5` or `Run > Start Debugging`
+3. A new VS Code window opens with the extension installed
+4. Open any `.md` file and test commands
+
+**Debug tips:**
+- Breakpoints work in `.ts` files in `src/` folder
+- Debug console shows `console.log()` output
+- Press `Ctrl+Shift+F5` to restart after code changes
+
+### Project Structure
+
+```
+src/
+├── extension.ts              # Entry point, command registration
+├── commands/
+│   ├── taskStatus.ts         # TODO/DONE commands
+│   ├── agenda.ts             # Agenda/Tasks commands
+│   ├── timestamps.ts         # Timestamp commands
+│   └── moveHeading.ts        # Archive/Promote commands
+└── views/
+    └── agendaPanel.ts        # WebView for agenda display
+```
+
+## Installation
+
+### From Source (VSIX)
+
+```bash
+npm install -g @vscode/vsce
+vsce package
+code --install-extension markdown-org-vscode-0.1.0.vsix
+```
+
+### For Development (Symlink)
+
+```bash
+ln -s $(pwd) ~/.vscode/extensions/markdown-org-vscode
+```
+
+Then reload VS Code window.
