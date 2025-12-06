@@ -27,8 +27,8 @@
   - Added detailed Settings section with examples
   - Documented markdown-org-extract dependency and installation
 - [ ] Add screenshots/GIF demonstrations
-- [ ] Create CHANGELOG.md
-  - Document version 0.1.0 features
+- [x] Create CHANGELOG.md
+  - Documented version 0.1.0 features
   - Set up format for future releases
 
 ## Testing
