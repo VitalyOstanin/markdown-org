@@ -45,6 +45,7 @@ export class AgendaPanel {
         const today = new Date();
         const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         AgendaPanel.currentDate = date || localDate;
+        const locale = vscode.workspace.getConfiguration('markdown-org').get<string>('dateLocale', 'en-US');
 
         if (AgendaPanel.currentPanel) {
             if (userInitiated) {
@@ -89,7 +90,7 @@ export class AgendaPanel {
                 }
             });
 
-            AgendaPanel.currentPanel.webview.html = this.getHtmlContent(data, mode);
+            AgendaPanel.currentPanel.webview.html = this.getHtmlContent(data, mode, locale);
         }
 
         if (!AgendaPanel.watcher && refreshCallback) {
@@ -124,7 +125,7 @@ export class AgendaPanel {
         }
     }
 
-    private static getHtmlContent(data: AgendaData, mode: string): string {
+    private static getHtmlContent(data: AgendaData, mode: string, locale: string): string {
         const dataJson = JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
         const today = new Date();
         const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -204,6 +205,7 @@ export class AgendaPanel {
         const vscode = acquireVsCodeApi();
         const initialData = ${dataJson};
         const initialMode = ${JSON.stringify(mode)};
+        const locale = ${JSON.stringify(locale)};
         let currentDate = ${JSON.stringify(currentDate)};
         
         function escapeHtml(text) {
@@ -235,8 +237,8 @@ export class AgendaPanel {
             }
             const unit = initialMode === 'day' ? 'Day' : initialMode === 'week' ? 'Week' : 'Month';
             const d = new Date(currentDate);
-            const weekday = d.toLocaleDateString('ru-RU', { weekday: 'long' });
-            const dayMonth = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+            const weekday = d.toLocaleDateString(locale, { weekday: 'long' });
+            const dayMonth = d.toLocaleDateString(locale, { day: 'numeric', month: 'long' });
             const year = d.getFullYear();
             const dateStr = weekday + ', ' + dayMonth + ' ' + year;
             navBar.innerHTML = 
@@ -363,9 +365,9 @@ export class AgendaPanel {
         
         function formatDayHeader(date) {
             const d = new Date(date);
-            const weekday = d.toLocaleDateString('ru-RU', { weekday: 'long' });
-            const dayMonth = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
-            const year = d.toLocaleDateString('ru-RU', { year: 'numeric' });
+            const weekday = d.toLocaleDateString(locale, { weekday: 'long' });
+            const dayMonth = d.toLocaleDateString(locale, { day: 'numeric', month: 'long' });
+            const year = d.toLocaleDateString(locale, { year: 'numeric' });
             const [day, month] = dayMonth.split(' ');
             return '<span>' + weekday + '</span><span style="text-align: right">' + day + '</span><span>' + month + ' ' + year + '</span>';
         }

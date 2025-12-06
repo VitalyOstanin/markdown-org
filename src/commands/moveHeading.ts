@@ -119,7 +119,12 @@ export async function promoteToMaintain() {
     }
 
     const config = vscode.workspace.getConfiguration('markdown-org');
-    const maintainPath = config.get<string>('maintainFilePath', '/home/vyt/devel/vyt-org/vyt-todo.md');
+    const maintainPath = config.get<string>('maintainFilePath', '');
+    
+    if (!maintainPath) {
+        vscode.window.showErrorMessage('Markdown Org: Please configure markdown-org.maintainFilePath in settings');
+        return;
+    }
     
     const document = editor.document;
     const position = editor.selection.active;

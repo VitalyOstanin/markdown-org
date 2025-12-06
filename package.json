@@ -140,8 +140,8 @@
       "properties": {
         "markdown-org.extractorPath": {
           "type": "string",
-          "default": "/home/vyt/devel/markdown-extract/target/release/markdown-extract",
-          "description": "Path to markdown-extract executable"
+          "default": "markdown-org-extract",
+          "description": "Path to markdown-org-extract executable (default: searches in PATH)"
         },
         "markdown-org.workspaceDir": {
           "type": "string",
@@ -150,8 +150,13 @@
         },
         "markdown-org.maintainFilePath": {
           "type": "string",
-          "default": "/home/vyt/devel/vyt-org/vyt-todo.md",
-          "description": "Path to maintain file for promoted headings"
+          "default": "",
+          "description": "Path to maintain file for promoted headings (empty = disabled)"
+        },
+        "markdown-org.dateLocale": {
+          "type": "string",
+          "default": "en-US",
+          "description": "Locale for date formatting (e.g., en-US, ru-RU, de-DE)"
         }
       }
     }

@@ -113,8 +113,10 @@ ln -s $(pwd) ~/.vscode/extensions/markdown-org-vscode
 
 ### Настройки
 
-- `markdown-org.extractorPath` - Путь к markdown-extract (по умолчанию: `/home/vyt/devel/markdown-extract/target/release/markdown-extract`)
+- `markdown-org.extractorPath` - Путь к markdown-org-extract (по умолчанию: `markdown-org-extract` из PATH)
 - `markdown-org.workspaceDir` - Каталог для сканирования (по умолчанию: корень workspace)
+- `markdown-org.maintainFilePath` - Путь к файлу для перемещения заголовков (по умолчанию: отключено)
+- `markdown-org.dateLocale` - Локаль для форматирования дат (по умолчанию: `en-US`, примеры: `ru-RU`, `de-DE`)
 
 ## Зависимости
 
