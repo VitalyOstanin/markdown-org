@@ -160,12 +160,12 @@ export class AgendaPanel {
             background: #1177bb;
         }
         .nav-date {
-            color: #569cd6;
+            color: #4fc1ff;
             font-weight: bold;
             margin: 0 10px;
         }
         .day-header {
-            color: #569cd6;
+            color: #4fc1ff;
             font-weight: bold;
             margin: 20px 0 5px 0;
             display: grid;
@@ -191,8 +191,10 @@ export class AgendaPanel {
         .priority-c { color: #4ec9b0; }
         .time-display { color: #4fc1ff; font-weight: bold; }
         .timestamp-type { font-weight: bold; }
+        .timestamp-deadline { color: #f48771; font-weight: bold; }
         .date-overdue { color: #808080; text-align: right; }
         .date-upcoming { color: #4fc1ff; text-align: right; font-weight: bold; }
+        .deadline-heading { color: #f48771; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -310,13 +312,14 @@ export class AgendaPanel {
                 ? formatDateForTitle(task.timestamp_date) 
                 : '';
             const dateClass = taskType === 'upcoming' ? 'date-upcoming' : 'date-overdue';
+            const headingClass = task.timestamp_type === 'DEADLINE' ? 'deadline-heading' : '';
             
             return '<div class="task-line" data-file="' + escapeHtml(task.file) + '" data-line="' + task.line + '">' +
                 '<span class="todo-label">todo:</span>' +
                 '<span>' + timeInfo + '</span>' +
                 '<span class="' + statusClass + '">' + escapeHtml(status) + '</span>' +
                 '<span class="' + priorityClass + '">' + escapeHtml(priority) + '</span>' +
-                '<span>' + escapeHtml(task.heading) + '</span>' +
+                '<span class="' + headingClass + '">' + escapeHtml(task.heading) + '</span>' +
                 '<span class="' + dateClass + '">' + dateDisplay + '</span>' +
                 '</div>';
         }
@@ -332,8 +335,9 @@ export class AgendaPanel {
         function getTimeInfo(task, daysOffset) {
             if (task.timestamp_time) {
                 const type = task.timestamp_type;
-                if (type && type !== 'PLAIN') {
-                    return '<span class="time-display">' + escapeHtml(task.timestamp_time) + '</span>...... <span class="timestamp-type">' + escapeHtml(type) + ':</span>';
+                if (type && type !== 'PLAIN' && type !== 'SCHEDULED') {
+                    const typeClass = type === 'DEADLINE' ? 'timestamp-deadline' : 'timestamp-type';
+                    return '<span class="time-display">' + escapeHtml(task.timestamp_time) + '</span>...... <span class="' + typeClass + '">' + escapeHtml(type) + ':</span>';
                 }
                 return '<span class="time-display">' + escapeHtml(task.timestamp_time) + '</span>......';
             }
@@ -350,10 +354,11 @@ export class AgendaPanel {
                 }
             }
             const type = task.timestamp_type;
-            if (type && type !== 'PLAIN') {
-                return '<span class="timestamp-type">' + escapeHtml(type) + ':</span>';
+            if (type && type !== 'PLAIN' && type !== 'SCHEDULED') {
+                const typeClass = type === 'DEADLINE' ? 'timestamp-deadline' : 'timestamp-type';
+                return '<span class="' + typeClass + '">' + escapeHtml(type) + ':</span>';
             }
-            return '<span class="timestamp-type">SCHEDULED:</span>';
+            return '';
         }
         
         function formatDayHeader(date) {
