@@ -83,8 +83,16 @@ ln -s $(pwd) ~/.vscode/extensions/markdown-org-vscode
 
 ### Priority Levels
 
-- `[#A]` - High priority (shown first in agenda)
-- No priority marker - Normal priority
+Priority markers can use any letter A-Z:
+
+```markdown
+## TODO [#A] High priority task
+## TODO [#B] Medium priority task  
+## TODO [#C] Low priority task
+## TODO Task without priority
+```
+
+Tasks with priority are shown first in agenda, sorted alphabetically (A before B before C).
 
 ### Repeating Tasks
 
