@@ -3,14 +3,14 @@ import * as vscode from 'vscode';
 const TIMESTAMP_REGEX = /<(\d{4})-(\d{2})-(\d{2})(?: ([А-Яа-яA-Za-z]{2,3}))?(?: (\d{2}):(\d{2}))?(?: (\+\d+[dwmy]{1,2}))?>/;
 const HEADING_REGEX = /^(#+)\s+(?:(TODO|DONE)\s+)?(?:\[#([A-Z])\]\s+)?(.+)$/;
 const TIMESTAMP_LINE_REGEX = /^(\s*)`(CREATED|SCHEDULED|DEADLINE|CLOSED): (<[^>]+>)`$/;
-const CLOCK_REGEX = /^(\s*)`CLOCK: ([\[<])(\d{4})-(\d{2})-(\d{2}) ([А-Яа-яA-Za-z]+) (\d{2}):(\d{2})([\]>])(?:--([\[<])(\d{4})-(\d{2})-(\d{2}) ([А-Яа-яA-Za-z]+) (\d{2}):(\d{2})([\]>]) => +(\d+):(\d{2}))?`$/;
+const CLOCK_REGEX = /^(\s*)`CLOCK: ([\[<])(\d{4})-(\d{2})-(\d{2}) ([А-Яа-яA-Za-z]+) (\d{2}):(\d{2})([\]>])(?:--([\[<])(\d{4})-(\d{2})-(\d{2}) ([А-Яа-яA-Za-z]+) (\d{2}):(\d{2})([\]>]) => +(-?\d+):(-?\d+))?`$/;
 const PRIORITY_A_CODE = 'A'.charCodeAt(0);
 const PRIORITY_Z_CODE = 'Z'.charCodeAt(0);
 
 type TimestampPart = 'year' | 'month' | 'day' | 'weekday' | 'hour' | 'minute';
 type HeadingPart = 'status' | 'priority';
 type TimestampType = 'type';
-type ClockTimestampPart = 'start-hour' | 'start-minute' | 'end-hour' | 'end-minute';
+type ClockTimestampPart = 'start-year' | 'start-month' | 'start-day' | 'start-weekday' | 'start-hour' | 'start-minute' | 'end-year' | 'end-month' | 'end-day' | 'end-weekday' | 'end-hour' | 'end-minute';
 
 function getClockTimestampAtCursor(editor: vscode.TextEditor): { match: RegExpMatchArray; part: ClockTimestampPart } | null {
     const position = editor.selection.active;
@@ -21,33 +21,46 @@ function getClockTimestampAtCursor(editor: vscode.TextEditor): { match: RegExpMa
     if (!match || match.index === undefined) return null;
     
     const fullMatch = match[0];
-    const startHourMatch = fullMatch.match(/(\d{2}):(\d{2})/);
-    if (!startHourMatch || startHourMatch.index === undefined) return null;
+    const cur = position.character;
     
-    const startHourPos = match.index + startHourMatch.index;
-    const startMinutePos = startHourPos + 3;
+    // Find all timestamps in the CLOCK line
+    const timestampRegex = /(\d{4})-(\d{2})-(\d{2}) ([А-Яа-яA-Za-z]+) (\d{2}):(\d{2})/g;
+    const timestamps = [...fullMatch.matchAll(timestampRegex)];
     
-    if (position.character >= startHourPos && position.character < startHourPos + 2) {
-        return { match, part: 'start-hour' };
-    }
-    if (position.character >= startMinutePos && position.character < startMinutePos + 2) {
-        return { match, part: 'start-minute' };
-    }
+    if (timestamps.length === 0) return null;
     
-    if (match[10]) {
-        const endPart = fullMatch.substring(fullMatch.indexOf('--'));
-        const endHourMatch = endPart.match(/(\d{2}):(\d{2})/);
-        if (endHourMatch && endHourMatch.index !== undefined) {
-            const endHourPos = match.index + fullMatch.indexOf('--') + endHourMatch.index;
-            const endMinutePos = endHourPos + 3;
-            
-            if (position.character >= endHourPos && position.character < endHourPos + 2) {
-                return { match, part: 'end-hour' };
-            }
-            if (position.character >= endMinutePos && position.character < endMinutePos + 2) {
-                return { match, part: 'end-minute' };
-            }
-        }
+    // Check start timestamp
+    const startTs = timestamps[0];
+    const startBase = match.index + startTs.index!;
+    
+    if (cur >= startBase && cur < startBase + 4) return { match, part: 'start-year' };
+    if (cur >= startBase + 5 && cur < startBase + 7) return { match, part: 'start-month' };
+    if (cur >= startBase + 8 && cur < startBase + 10) return { match, part: 'start-day' };
+    
+    const startWeekdayPos = startBase + 11;
+    const startWeekdayLen = startTs[4].length;
+    if (cur >= startWeekdayPos && cur < startWeekdayPos + startWeekdayLen) return { match, part: 'start-weekday' };
+    
+    const startTimePos = startWeekdayPos + startWeekdayLen + 1;
+    if (cur >= startTimePos && cur <= startTimePos + 2) return { match, part: 'start-hour' };
+    if (cur >= startTimePos + 3 && cur <= startTimePos + 5) return { match, part: 'start-minute' };
+    
+    // Check end timestamp if exists
+    if (match[10] && timestamps.length > 1) {
+        const endTs = timestamps[1];
+        const endBase = match.index + endTs.index!;
+        
+        if (cur >= endBase && cur < endBase + 4) return { match, part: 'end-year' };
+        if (cur >= endBase + 5 && cur < endBase + 7) return { match, part: 'end-month' };
+        if (cur >= endBase + 8 && cur < endBase + 10) return { match, part: 'end-day' };
+        
+        const endWeekdayPos = endBase + 11;
+        const endWeekdayLen = endTs[4].length;
+        if (cur >= endWeekdayPos && cur < endWeekdayPos + endWeekdayLen) return { match, part: 'end-weekday' };
+        
+        const endTimePos = endWeekdayPos + endWeekdayLen + 1;
+        if (cur >= endTimePos && cur <= endTimePos + 2) return { match, part: 'end-hour' };
+        if (cur >= endTimePos + 3 && cur <= endTimePos + 5) return { match, part: 'end-minute' };
     }
     
     return null;
@@ -311,20 +324,22 @@ function adjustClockTimestamp(match: RegExpMatchArray, part: ClockTimestampPart,
     const indent = match[1];
     const startBracket = match[2];
     const endBracket = match[9];
-    let startYear = parseInt(match[3]);
-    let startMonth = parseInt(match[4]);
-    let startDay = parseInt(match[5]);
+    
+    const startDate = new Date(
+        parseInt(match[3]),
+        parseInt(match[4]) - 1,
+        parseInt(match[5]),
+        parseInt(match[7]),
+        parseInt(match[8])
+    );
     const startWeekday = match[6];
-    let startHour = parseInt(match[7]);
-    let startMinute = parseInt(match[8]);
     
-    const startDate = new Date(startYear, startMonth - 1, startDay, startHour, startMinute);
-    
-    if (part === 'start-hour') {
-        startDate.setHours(startDate.getHours() + delta);
-    } else if (part === 'start-minute') {
-        startDate.setMinutes(startDate.getMinutes() + delta);
-    }
+    // Adjust start date based on part
+    if (part === 'start-year') startDate.setFullYear(startDate.getFullYear() + delta);
+    else if (part === 'start-month') startDate.setMonth(startDate.getMonth() + delta);
+    else if (part === 'start-day' || part === 'start-weekday') startDate.setDate(startDate.getDate() + delta);
+    else if (part === 'start-hour') startDate.setHours(startDate.getHours() + delta);
+    else if (part === 'start-minute') startDate.setMinutes(startDate.getMinutes() + delta);
     
     const newStartWeekday = getWeekdayName(startDate, startWeekday);
     const startTimestamp = `${startBracket}${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')} ${newStartWeekday} ${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}${endBracket}`;
@@ -335,20 +350,22 @@ function adjustClockTimestamp(match: RegExpMatchArray, part: ClockTimestampPart,
     
     const endStartBracket = match[10];
     const endEndBracket = match[17];
-    let endYear = parseInt(match[11]);
-    let endMonth = parseInt(match[12]);
-    let endDay = parseInt(match[13]);
+    
+    const endDate = new Date(
+        parseInt(match[11]),
+        parseInt(match[12]) - 1,
+        parseInt(match[13]),
+        parseInt(match[15]),
+        parseInt(match[16])
+    );
     const endWeekday = match[14];
-    let endHour = parseInt(match[15]);
-    let endMinute = parseInt(match[16]);
     
-    const endDate = new Date(endYear, endMonth - 1, endDay, endHour, endMinute);
-    
-    if (part === 'end-hour') {
-        endDate.setHours(endDate.getHours() + delta);
-    } else if (part === 'end-minute') {
-        endDate.setMinutes(endDate.getMinutes() + delta);
-    }
+    // Adjust end date based on part
+    if (part === 'end-year') endDate.setFullYear(endDate.getFullYear() + delta);
+    else if (part === 'end-month') endDate.setMonth(endDate.getMonth() + delta);
+    else if (part === 'end-day' || part === 'end-weekday') endDate.setDate(endDate.getDate() + delta);
+    else if (part === 'end-hour') endDate.setHours(endDate.getHours() + delta);
+    else if (part === 'end-minute') endDate.setMinutes(endDate.getMinutes() + delta);
     
     const newEndWeekday = getWeekdayName(endDate, endWeekday);
     const endTimestamp = `${endStartBracket}${endDate.getFullYear()}-${(endDate.getMonth() + 1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')} ${newEndWeekday} ${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}${endEndBracket}`;

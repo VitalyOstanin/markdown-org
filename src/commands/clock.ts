@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { findNearestHeading } from '../utils';
 
-const CLOCK_REGEX = /^(\s*)`CLOCK: \[(\d{4})-(\d{2})-(\d{2}) [^\]]+\](?:--\[(\d{4})-(\d{2})-(\d{2}) [^\]]+\] => +(\d+):(\d{2}))?`$/;
+const CLOCK_REGEX = /^(\s*)`CLOCK: ([\[<])(\d{4})-(\d{2})-(\d{2}) ([^\]>]+)([\]>])(?:--([\[<])(\d{4})-(\d{2})-(\d{2}) ([^\]>]+)([\]>]) => +(-?\d+):(-?\d+))?`$/;
 
 function formatTimestamp(date: Date): string {
     const year = date.getFullYear();
