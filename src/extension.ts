@@ -4,6 +4,7 @@ import { showAgenda, cycleTag } from './commands/agenda';
 import { adjustTimestamp } from './commands/timestampEdit';
 import { moveToArchive, promoteToMaintain } from './commands/moveHeading';
 import { insertClockStart, insertClockFinish } from './commands/clock';
+import { insertClockTable } from './commands/clocktable';
 
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
@@ -15,6 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('markdown-org.insertDeadline', () => insertDeadlineTimestamp()),
         vscode.commands.registerCommand('markdown-org.insertClockStart', () => insertClockStart()),
         vscode.commands.registerCommand('markdown-org.insertClockFinish', () => insertClockFinish()),
+        vscode.commands.registerCommand('markdown-org.insertClockTable', () => insertClockTable()),
         vscode.commands.registerCommand('markdown-org.showAgendaDay', () => showAgenda(context, 'day')),
         vscode.commands.registerCommand('markdown-org.showAgendaWeek', () => showAgenda(context, 'week')),
         vscode.commands.registerCommand('markdown-org.showAgendaMonth', () => showAgenda(context, 'month')),

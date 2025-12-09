@@ -52,6 +52,10 @@
         "title": "Markdown Org: Insert CLOCK Finish"
       },
       {
+        "command": "markdown-org.insertClockTable",
+        "title": "Markdown Org: Insert CLOCK Table"
+      },
+      {
         "command": "markdown-org.showAgendaDay",
         "title": "Markdown Org: Show Agenda (Day)"
       },
@@ -130,6 +134,11 @@
         "when": "editorTextFocus && editorLangId == markdown"
       },
       {
+        "command": "markdown-org.insertClockTable",
+        "key": "ctrl+k ctrl+k ctrl+c ctrl+v",
+        "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
         "command": "markdown-org.showAgendaWeek",
         "key": "ctrl+k ctrl+w",
         "when": "editorTextFocus && editorLangId == markdown"
@@ -190,9 +199,18 @@
         "markdown-org.fileTags": {
           "type": "array",
           "default": [
-            {"name": "ALL", "pattern": ""},
-            {"name": "WORK", "pattern": "work"},
-            {"name": "PRIVATE", "pattern": "!work"}
+            {
+              "name": "ALL",
+              "pattern": ""
+            },
+            {
+              "name": "WORK",
+              "pattern": "work"
+            },
+            {
+              "name": "PRIVATE",
+              "pattern": "!work"
+            }
           ],
           "description": "File tags based on filename patterns. Use '!' prefix for negation (e.g., '!work'). Empty pattern matches files without other patterns."
         },
@@ -220,6 +238,7 @@
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.x",
+    "@types/sinon": "^21.0.0",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.x",
     "@typescript-eslint/parser": "^6.x",
@@ -227,6 +246,7 @@
     "eslint": "^8.x",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
+    "sinon": "^21.0.0",
     "typescript": "^5.3.0"
   }
 }
